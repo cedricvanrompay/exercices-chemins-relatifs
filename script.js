@@ -20,6 +20,9 @@ function validateForm(event){
         //alert("Bravo");
         resultat.innerText="Bravo";
     }
+
+    const etapes = explication(cheminActuel, cheminLien, calculCheminRelatif(cheminActuel, cheminLien));
+    afficherExplication(etapes);
 }
 
 function calculCheminRelatif(cheminDepart, cheminLien){
@@ -59,6 +62,7 @@ function nouvelExercice(){
     cheminDestination.value="";
     const resultat = document.getElementById("resultat");
     resultat.innerText="";
+    document.getElementById("explication").innerHTML = "";
 }
 
 const valeursDeTest = [
@@ -132,11 +136,41 @@ const nouvelExerciceBouton = document.getElementById("nouvelExercice");
 nouvelExerciceBouton.onclick = nouvelExercice;
 
 function explication(cheminActuel,cheminLien,cheminDestination){
+    /*
     return [
             "Le chemin actuel est composé d'un dossier /test suivi par un fichier lol",
             "Le lien est composé d'un fichier re-test",
             "Le fichier re-test supprime le fichier lol et le fichier re-test sera placé dans le dossier /test",
         ];
+    */
+
+        const etapes = [];
+        if (cheminLien.startsWith("/")){
+            etapes.push(`Le lien ${cheminLien} commence par "/", c'est un chemin absolu`);
+            etapes.push(`On ignore le chemin actuel et voici le resultat: ${cheminLien}`);
+            return etapes;
+        }
+        etapes.push(`Le lien ${cheminLien} ne commence pas par "/", c'est un chemin relatif`);
+        const parties = cheminActuel.split("/");
+        parties.pop();
+        const dossierDepart = parties.join("/") || "/";
+        etapes.push(`On retire le fichier du chemin actuel ${cheminActuel} et on part du dossier ${dossierDepart}`)
+
+        const cheminCourant = [...parties];
+        for (const segment of cheminLien.split("/")){
+            if (segment === ".."){
+                const avant = cheminCourant.join("/") || "/";
+                cheminCourant.pop();
+                const apres = cheminCourant.join("/") || "/";
+                etapes.push(`"..", on remonte d'un niveau, ${avant} devient ${apres}`);
+            }
+            else {
+                cheminCourant.push(segment);
+                etapes.push(`${segment}, on descend, chemin courant = ${cheminCourant.join("/")}`)
+            }
+        }
+        etapes.push(`Resultat final: ${cheminDestination}`);
+        return etapes;
 }
 /**
  * 
@@ -144,6 +178,17 @@ function explication(cheminActuel,cheminLien,cheminDestination){
  * @param {string[]} b 
  * @returns 
  */
+
+function afficherExplication(etapes){
+    const liste = document.getElementById("explication"); // "liste" partout
+    liste.innerHTML = "";
+    for (const etape of etapes){
+        const li = document.createElement("li");
+        li.innerText = etape;
+        liste.appendChild(li);
+    }
+}
+
 function differenceTableau(a,b){
     if (a.length != b.length){
         return "Resultat n'a pas la longueur attendue";
